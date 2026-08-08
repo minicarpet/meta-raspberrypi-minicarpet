@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <update.swu>" >&2
+    exit 2
+fi
+
+SWU="$1"
+ACTIVE_ROOTPART="$(fw_printenv -n rootpart)"
+
+case "${ACTIVE_ROOTPART}" in
+    2)
+        TARGET="rootfsB"
+        ;;
+    3)
+        TARGET="rootfsA"
+        ;;
+    *)
+        echo "Unsupported active rootpart: ${ACTIVE_ROOTPART}" >&2
+        exit 1
+        ;;
+esac
+
+echo "Active rootfs: p${ACTIVE_ROOTPART}"
+echo "Updating inactive slot: ${TARGET}"
+
+exec swupdate \
+    -v \
+    -i "${SWU}" \
+    -e "stable,${TARGET}"

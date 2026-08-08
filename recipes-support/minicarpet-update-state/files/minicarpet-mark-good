@@ -1,0 +1,32 @@
+#!/bin/sh
+set -eu
+
+if ! command -v fw_printenv >/dev/null 2>&1 || ! command -v fw_setenv >/dev/null 2>&1; then
+    echo "libubootenv tools are unavailable" >&2
+    exit 1
+fi
+
+UPGRADE_AVAILABLE="$(fw_printenv -n upgrade_available 2>/dev/null || true)"
+[ "$UPGRADE_AVAILABLE" = "1" ] || exit 0
+
+CURRENT_ROOTPART="$(sed -n 's/.*root=\/dev\/mmcblk0p\([0-9][0-9]*\).*/\1/p' /proc/cmdline)"
+SELECTED_ROOTPART="$(fw_printenv -n rootpart 2>/dev/null || true)"
+
+case "$CURRENT_ROOTPART" in
+    2|3) ;;
+    *)
+        echo "Cannot determine current rootfs slot" >&2
+        exit 1
+        ;;
+esac
+
+if [ "$CURRENT_ROOTPART" != "$SELECTED_ROOTPART" ]; then
+    echo "Current slot p${CURRENT_ROOTPART} does not match pending slot p${SELECTED_ROOTPART}" >&2
+    exit 1
+fi
+
+fw_setenv bootcount 0
+fw_setenv upgrade_available 0
+sync
+
+echo "Minicarpet update confirmed on rootfs p${CURRENT_ROOTPART}"

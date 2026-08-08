@@ -1,0 +1,18 @@
+### Minicarpet build environment ready. ###
+
+Build the SD-card image, ext4 rootfs and SWUpdate bundle with:
+
+    bitbake minicarpet-image
+
+Expected deploy artifacts include:
+
+    minicarpet-image-minicarpet-rpi4.rootfs.ext4
+    minicarpet-image-minicarpet-rpi4.rootfs.wic.bz2
+    minicarpet-image-minicarpet-rpi4.rootfs.swu
+
+Useful checks:
+
+    bitbake-layers show-appends
+    bitbake-getvar IMAGE_FSTYPES
+    bitbake-getvar WKS_FILE
+    bitbake-getvar CMDLINE_ROOTFS

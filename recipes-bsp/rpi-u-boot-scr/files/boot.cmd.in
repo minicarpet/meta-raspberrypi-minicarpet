@@ -1,0 +1,95 @@
+# Get the boot arguments prepared by the Raspberry Pi firmware. CMDLINE_ROOTFS
+# is empty for Minicarpet, so this base command line intentionally has no root=.
+fdt addr ${fdt_addr} && fdt get value bootargs /chosen bootargs
+setenv base_bootargs "${bootargs}"
+
+# Default persistent A/B state.
+if test -z "${rootpart}"; then
+    setenv rootpart 2
+    setenv rollback_rootpart 2
+    setenv upgrade_available 0
+    setenv bootcount 0
+    setenv bootlimit 3
+    saveenv
+fi
+
+if test -z "${bootlimit}"; then
+    setenv bootlimit 3
+fi
+
+if test -z "${upgrade_available}"; then
+    setenv upgrade_available 0
+fi
+
+# A pending update gets a limited number of boot attempts. Userspace clears
+# upgrade_available once the new system reaches the mark-good service.
+if test "${upgrade_available}" = "1"; then
+    if test -z "${bootcount}"; then
+        setenv bootcount 0
+    fi
+
+    setexpr bootcount ${bootcount} + 1
+    echo "Pending Minicarpet update: boot attempt ${bootcount}/${bootlimit}"
+
+    if test ${bootcount} -gt ${bootlimit}; then
+        if test -n "${rollback_rootpart}"; then
+            echo "Boot limit exceeded; rolling back to partition ${rollback_rootpart}"
+            setenv rootpart ${rollback_rootpart}
+        else
+            echo "Boot limit exceeded without rollback_rootpart; using rootfs A"
+            setenv rootpart 2
+        fi
+        setenv upgrade_available 0
+        setenv bootcount 0
+    fi
+
+    saveenv
+fi
+
+# rootfs A uses Image.A and rootfs B uses Image.B.
+if test "${rootpart}" = "3"; then
+    setenv kernel_slot B
+else
+    setenv rootpart 2
+    setenv kernel_slot A
+fi
+
+setenv bootargs "${base_bootargs} root=/dev/mmcblk0p${rootpart} rootfstype=ext4 rootwait rw"
+fdt set /chosen bootargs "${bootargs}"
+
+# Load the kernel matching the selected rootfs. If a newly selected kernel is
+# missing/corrupt at the FAT-file level, immediately fall back to the previous
+# slot instead of leaving U-Boot stopped at the prompt.
+if fatload @@BOOT_MEDIA@@ 0:1 ${kernel_addr_r} @@KERNEL_IMAGETYPE@@.${kernel_slot}; then
+    echo "Booting rootfs partition ${rootpart} with @@KERNEL_IMAGETYPE@@.${kernel_slot}"
+else
+    echo "Cannot load @@KERNEL_IMAGETYPE@@.${kernel_slot}"
+
+    if test -n "${rollback_rootpart}" && test "${rollback_rootpart}" != "${rootpart}"; then
+        echo "Falling back to partition ${rollback_rootpart}"
+        setenv rootpart ${rollback_rootpart}
+        setenv upgrade_available 0
+        setenv bootcount 0
+
+        if test "${rootpart}" = "3"; then
+            setenv kernel_slot B
+        else
+            setenv rootpart 2
+            setenv kernel_slot A
+        fi
+
+        setenv bootargs "${base_bootargs} root=/dev/mmcblk0p${rootpart} rootfstype=ext4 rootwait rw"
+        fdt set /chosen bootargs "${bootargs}"
+        saveenv
+
+        if ! fatload @@BOOT_MEDIA@@ 0:1 ${kernel_addr_r} @@KERNEL_IMAGETYPE@@.${kernel_slot}; then
+            echo "Rollback kernel @@KERNEL_IMAGETYPE@@.${kernel_slot} is also unavailable"
+            reset
+        fi
+    else
+        echo "No usable rollback slot is configured"
+        reset
+    fi
+fi
+
+@@KERNEL_BOOTCMD@@ ${kernel_addr_r} - ${fdt_addr}

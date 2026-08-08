@@ -1,0 +1,1 @@
+Minicarpet OS build configuration for Raspberry Pi 4 (64-bit), Yocto Wrynose.

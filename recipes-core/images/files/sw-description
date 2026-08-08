@@ -1,0 +1,71 @@
+software =
+{
+    version = "@@DISTRO_VERSION@@";
+    description = "Minicarpet OS A/B root filesystem and kernel update";
+
+    hardware-compatibility: [ "@@SWUPDATE_HWREV@@" ];
+
+    stable = {
+        rootfsA = {
+            images: (
+                {
+                    filename = "@@IMAGE_LINK_NAME@@.ext4";
+                    device = "/dev/mmcblk0p2";
+                    type = "raw";
+                }
+            );
+
+            files: (
+                {
+                    filename = "@@KERNEL_IMAGETYPE@@";
+                    device = "/dev/mmcblk0p1";
+                    filesystem = "vfat";
+                    path = "/@@KERNEL_IMAGETYPE@@.A";
+                    properties: {
+                        create-destination = "true";
+                        atomic-install = "true";
+                    };
+                }
+            );
+
+            scripts: (
+                {
+                    filename = "minicarpet-swupdate.sh";
+                    type = "shellscript";
+                    data = "2,@@KERNEL_IMAGETYPE@@.A";
+                }
+            );
+        };
+
+        rootfsB = {
+            images: (
+                {
+                    filename = "@@IMAGE_LINK_NAME@@.ext4";
+                    device = "/dev/mmcblk0p3";
+                    type = "raw";
+                }
+            );
+
+            files: (
+                {
+                    filename = "@@KERNEL_IMAGETYPE@@";
+                    device = "/dev/mmcblk0p1";
+                    filesystem = "vfat";
+                    path = "/@@KERNEL_IMAGETYPE@@.B";
+                    properties: {
+                        create-destination = "true";
+                        atomic-install = "true";
+                    };
+                }
+            );
+
+            scripts: (
+                {
+                    filename = "minicarpet-swupdate.sh";
+                    type = "shellscript";
+                    data = "3,@@KERNEL_IMAGETYPE@@.B";
+                }
+            );
+        };
+    };
+}

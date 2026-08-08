@@ -1,0 +1,12 @@
+[Unit]
+Description=Confirm successful Minicarpet A/B boot
+After=local-fs.target
+ConditionPathExists=/etc/fw_env.config
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/minicarpet-mark-good
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
