@@ -13,7 +13,7 @@ SRC_URI = " \
 
 SRCREV = "${AUTOREV}"
 
-PV = "0.1.0+git"
+PV = "0.2.0+git"
 
 inherit python_setuptools_build_meta
 inherit systemd
@@ -68,6 +68,12 @@ do_install:append() {
     install -m 0644 \
         ${UNPACKDIR}/fridge-agent-tmpfiles.conf \
         ${D}${sysconfdir}/tmpfiles.d/fridge-agent.conf
+}
+
+pkg_postinst:${PN}() {
+    if [ -z "$D" ]; then
+        systemctl try-restart fridge-agent.service || true
+    fi
 }
 
 CONFFILES:${PN} += " \
