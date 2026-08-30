@@ -42,6 +42,7 @@ IMAGE_INSTALL:append = " \
     swupdate \
     minicarpet-update \
     minicarpet-update-state \
+    apt-feed-config \
     e2fsprogs \
     e2fsprogs-resize2fs \
     util-linux \

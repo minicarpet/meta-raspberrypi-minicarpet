@@ -1,0 +1,3 @@
+deb [trusted=yes] http://192.168.1.23:8080/all ./
+deb [trusted=yes] http://192.168.1.23:8080/cortexa72 ./
+deb [trusted=yes] http://192.168.1.23:8080/minicarpet_rpi4 ./
