@@ -50,6 +50,16 @@ IMAGE_INSTALL:append = " \
     nano \
     ethtool \
     iproute2 \
+    \
+    fridge-agent \
+    \
+    sqlite3 \
+    curl \
+    openssl \
+    \
+    avahi-daemon \
+    libnss-mdns \
+    tzdata \
 "
 
 IMAGE_LINGUAS = ""
