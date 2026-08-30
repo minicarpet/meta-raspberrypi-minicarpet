@@ -2,6 +2,7 @@
 Description=Fridge AI Agent
 After=network-online.target
 Wants=network-online.target
+RequiresMountsFor=/data
 
 [Service]
 Type=simple
@@ -10,28 +11,23 @@ User=fridge-agent
 Group=fridge-agent
 
 EnvironmentFile=-/etc/fridge-agent/fridge-agent.env
+EnvironmentFile=-/data/secrets/fridge-agent.env
 
 ExecStart=/usr/bin/fridge-agent
 
 Restart=on-failure
 RestartSec=5
 
-StateDirectory=fridge-agent
-StateDirectoryMode=0750
+WorkingDirectory=/data/fridge-agent
 
-WorkingDirectory=/var/lib/fridge-agent
+ReadWritePaths=/data/fridge-agent
 
 UMask=0027
 
 NoNewPrivileges=true
 PrivateTmp=true
-
 ProtectSystem=strict
 ProtectHome=true
-
-ProtectKernelTunables=true
-ProtectKernelModules=true
-ProtectControlGroups=true
 
 RestrictSUIDSGID=true
 

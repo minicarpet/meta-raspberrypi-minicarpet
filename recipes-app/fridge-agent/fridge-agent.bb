@@ -8,6 +8,7 @@ SRC_URI = " \
     git://github.com/minicarpet/fridge-agent.git;protocol=https;branch=main \
     file://fridge-agent.service \
     file://fridge-agent.env \
+    file://fridge-agent-tmpfiles.conf \
 "
 
 SRCREV = "${AUTOREV}"
@@ -23,13 +24,19 @@ SYSTEMD_AUTO_ENABLE:${PN} = "enable"
 
 USERADD_PACKAGES = "${PN}"
 
+FRIDGE_AGENT_UID = "995"
+FRIDGE_AGENT_GID = "995"
+
 GROUPADD_PARAM:${PN} = " \
-    --system fridge-agent \
+    --system \
+    --gid ${FRIDGE_AGENT_GID} \
+    fridge-agent \
 "
 
 USERADD_PARAM:${PN} = " \
     --system \
-    --gid fridge-agent \
+    --uid ${FRIDGE_AGENT_UID} \
+    --gid ${FRIDGE_AGENT_GID} \
     --home-dir ${localstatedir}/lib/fridge-agent \
     --no-create-home \
     --shell /bin/false \
@@ -56,6 +63,11 @@ do_install:append() {
     install -m 0644 \
         ${UNPACKDIR}/fridge-agent.env \
         ${D}${sysconfdir}/fridge-agent/fridge-agent.env
+
+    install -d ${D}${sysconfdir}/tmpfiles.d
+    install -m 0644 \
+        ${UNPACKDIR}/fridge-agent-tmpfiles.conf \
+        ${D}${sysconfdir}/tmpfiles.d/fridge-agent.conf
 }
 
 CONFFILES:${PN} += " \
